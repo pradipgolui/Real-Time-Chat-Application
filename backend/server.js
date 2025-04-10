@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const connectDB = require('./config/database');
 const socketIO = require('socket.io');
 const cors = require('cors');
 const PORT = process.env.PORT || 3000;
@@ -13,7 +14,8 @@ const io = socketIO(server, {
     }
 }); 
 
-
+connectDB();  
+ 
 app.use(cors());
 app.use(express.json());
 
