@@ -1,45 +1,50 @@
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
-// Register user
-const registerUser = async (req, res) => {
+// User register
+const registerUser = async(req, res)=>{
   try {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+    
+    if( !name || !email || !password ){
+      return res.status(400).json({ message :"all fields are required"});
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(409).json({ message: "User already exists" });
-    }
-
-    const newUser = new User({ name, email, password });
+    const userExist =  await User.findOne({ email });
+    if(userExist){
+      return res.status(409).json({ message: "User already exists"});
+    } 
+    
+    const hashPassword = await bcrypt.hash(password, 10);
+    const newUser = new User ({ name, email , password: hashPassword });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully", user: newUser });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(201).json({ message: "User register successfully", user: newUser});
+    
+  } catch (error) {
+    return res.status(500).json({ Message: "Server Error"});
   }
 };
 
-// Login user
-const loginUser = async (req, res) => {
+const loginUser = async(req, res)=>{
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
+
+    const isMatchPassword = await bcrypt.compare(password, user.password);
+    if(!user || !isMatchPassword){
+      return res.status(409).json({ Message: "Invalid Credentials"});
     }
 
-    res.status(200).json({ message: "Login successful", user });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(200).json({ Message: "Login successfully",user });
+    
+  } catch (error) {
+    return res.status(500).json({ message: "Server error"});
   }
 };
 
-module.exports = {
+module.exports ={
   registerUser,
   loginUser
 };
